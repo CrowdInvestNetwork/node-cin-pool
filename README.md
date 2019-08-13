@@ -1,17 +1,10 @@
-![image](https://user-images.githubusercontent.com/34389545/35821974-62e0e25c-0a70-11e8-87dd-2cfffeb6ed47.png)
-
-#### Master Build Status
-[![Build Status](https://travis-ci.org/turtlecoin/node-turtle-pool.svg?branch=master)](https://travis-ci.org/turtlecoin/node-turtle-pool)
-
-#### Development Build Status
-[![Build Status](https://travis-ci.org/turtlecoin/node-turtle-pool.svg?branch=development)](https://travis-ci.org/turtlecoin/node-turtle-pool)
-
-
-turtle-pool (for NodeJS LTS)
+cin-pool (for NodeJS LTS)
 ====================
-Formerly known as cryptonote-forknote-pool, forked from Forknote Project.
+Forked from node-turtle-pool that
+formerly known as cryptonote-forknote-pool, forked from Forknote Project.
 
-High performance Node.js (with native C addons) mining pool for Cryptonote based coins, created with the Forknote software such as Bytecoin, Dashcoin, etc..
+High performance Node.js (with native C addons) mining pool for Cryptonote based coins, 
+created with the Forknote software such as Bytecoin, Dashcoin, etc..
 
 Comes with lightweight example front-end script which uses the pool's AJAX API.
 
@@ -86,6 +79,7 @@ Comes with lightweight example front-end script which uses the pool's AJAX API.
 * [CryptoNote Universal Pool Forum](https://bitcointalk.org/index.php?topic=705509)
 * [Forknote](https://forknote.net)
 * [TurtleCoin](http://chat.turtlecoin.lol)
+* [CrowdInvestNetwork](http://www.cinetwork.io)
 
 #### Pools Using This Software
 
@@ -96,8 +90,8 @@ Usage
 ===
 
 #### Requirements
-* Turtlecoind daemon
-* turtle-service
+* CrowdInvestNetworkd daemon
+* CrowdInvestNetwork-service (Wallet RPC service)
 * [Node.js](http://nodejs.org/) LTS (6,8,10) ([follow these installation instructions](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions))
 * [Redis](http://redis.io/) key-value store v2.6+ ([follow these instructions](http://redis.io/topics/quickstart))
 * libssl required for the node-multi-hashing module
@@ -145,17 +139,17 @@ sudo apt-get install -y nodejs
 
 I have found using a screen session to keep everything running on the server works well.
 
-Grab your most recent TurtleCoin release (https://github.com/turtlecoin/turtlecoin/releases/) then launch your daemon and sync your chain.
+Grab your most recent CrowdInvestNetwork release (https://github.com/CrowdInvestNetwork/CIN/releases/) then launch your daemon and sync your chain.
 
-Once your daemon is synced with the network start your turtle-service and redis-server.
+Once your daemon is synced with the network start your CrowdInvestNetwork-service and redis-server.
 
 #### 1) Downloading & Installing
 
 Clone the repository and run `npm install` for all the dependencies to be installed:
 
 ```bash
-git clone https://github.com/turtlecoin/turtle-pool turtle-pool
-cd turtle-pool
+git clone https://github.com/CrowdInvestNetwork/node-cin-pool pool
+cd pool
 npm install && npm test
 ```
 
@@ -165,16 +159,16 @@ npm install && npm test
 Explanation for each field:
 ```javascript
 /* Used for storage in redis so multiple coins can share the same redis instance. */
-"coin": "dashcoin",
+"coin": "CIN",
 
 /* Used for front-end display */
-"symbol": "DSH",
+"symbol": "CIN",
 
 /* Minimum units in a single coin, see COIN constant in DAEMON_CODE/src/cryptonote_config.h */
-"coinUnits": 1000000000000,
+"coinUnits": 100000000,
 
 /* Coin network time to mine one block, see DIFFICULTY_TARGET constant in DAEMON_CODE/src/cryptonote_config.h */
-"coinDifficultyTarget": 120,
+"coinDifficultyTarget": 60,
 
 "logging": {
 
@@ -210,7 +204,7 @@ Explanation for each field:
     "clusterForks": "auto",
 
     /* Address where block rewards go, and miner payments come from. */
-    "poolAddress": "D6WLtrV1SBWV8HWQzQv8uuYuGy3uwZ8ah5iT5HovSqhTKMauquoTsKP8RBJzVqVesX87poYWQgkGWB4NWHJ6Ravv93v4BaE"
+    "poolAddress": "cSWH7notBV2N76cvidZvNyiS7sq85u5wwetwsG21QbfuiwNhf3DcnVcCdmVca1TUTy91i8dkPrekBRkXoavJEMTNAUZD6fyozz"
 
     /* Poll RPC daemons for new blocks every this many milliseconds. */
     "blockRefreshInterval": 1000,
@@ -261,7 +255,7 @@ Explanation for each field:
       "enabled": false, //enable or disable the shareTrust system. shareTrust can offer significant CPU workload reduction, however does present a risk of being exploited by miners gaming the percentages of the system.
       "maxTrustPercent": 50, //The maximum percent chance a share will be considered trusted (not fully validated) 50 means 1 of 2 shares are fully validated at random, 75 means 1 of 4 are fully validated (or 3 of 4 are trusted).
       "probabilityStepPercent": 1, //The percent the probabality of a share is trusted increases from 0 to maxTrustPercent at a maximum rate of once per probabilityStepWindow seconds in steps of probabilityStepPercent and only on share submission.
-      "probabilityStepWindow": 30, //The probability (chance a share is considered trusted) will increase from 0 to maxTrustPercent by steps of probabilityStepPercent at a maximum rate of once every probabilityStepWindow seconds.
+      "probabilityStepWindow": 15, //The probability (chance a share is considered trusted) will increase from 0 to maxTrustPercent by steps of probabilityStepPercent at a maximum rate of once every probabilityStepWindow seconds.
       "minUntrustedShares": 50, //The minimum amount of shares that will be fully validated before shareTrust will begin.
       "minUntrustedSeconds": 300, //The minimum amount of time in seconds shares will be fully validated before shareTrust will begin.
       "maxTrustedDifficulty": 100000, //Shares above this difficulty will be fully validated (not trusted).
@@ -296,12 +290,14 @@ Explanation for each field:
 /* Module that sends payments to miners according to their submitted shares. */
 "payments": {
     "enabled": true,
-    "interval": 600, //how often to run in seconds
+    "allowPaymentId": true,
+    "interval": 120, //how often to run in seconds
     "maxAddresses": 50, //split up payments if sending to more than this many addresses
-    "transferFee": 5000000000, //fee to pay for each transaction
-    "minPayment": 100000000000, //miner balance required before sending payment
-    "maxTransactionAmount": 0, //split transactions by this amount(to prevent "too big transaction" error)
-    "denomination": 100000000000 //truncate to this precision and store remainder
+    "transferFee": 100, //fee to pay for each transaction
+    "minPayment": 1000, //miner balance required before sending payment
+    "minPaymentIdPayment": 1000,
+    "maxTransactionAmount": 10000000000000, // split transactions by this amount(to prevent "too big transaction" error)
+    "denomination": 100000000 //truncate to this precision and store remainder
 },
 
 /* Module that monitors the submitted block maturities and manages rounds. Confirmed
@@ -313,34 +309,34 @@ Explanation for each field:
 
     /* Block depth required for a block to unlocked/mature. Found in daemon source as
        the variable CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW */
-    "depth": 60,
-    "poolFee": 1.8, //1.8% pool fee (2% total fee total including donations)
-    "devDonation": 0.1, //0.1% donation to send to pool dev - only works with Monero
-    "coreDevDonation": 0.1 //0.1% donation to send to core devs - works with Bytecoin, Monero, Dashcoin, QuarazCoin, Fantoncoin, AEON and OneEvilCoin
+    "depth": 40,
+    "poolFee": 1, //1% pool fee (2% total fee total including donations)
+    "devDonation": 0.0, //0.1% donation to send to pool dev - only works with Monero
+    "coreDevDonation": 0.0 //0.1% donation to send to core devs - works with Bytecoin, Monero, Dashcoin, AEON, turtlecoin
 },
 
 /* AJAX API used for front-end website. */
 "api": {
     "enabled": true,
     "hashrateWindow": 600, //how many second worth of shares used to estimate hash rate
-    "updateInterval": 3, //gather stats and broadcast every this many seconds
-    "host": "127.0.0.1", //if api module is running on a different host (i.e, containerized),
+    "updateInterval": 5, //gather stats and broadcast every this many seconds
+    "host": "0.0.0.0", //if api module is running on a different host (i.e, containerized),
     "port": 8117,
-    "blocks": 30, //amount of blocks to send at a time
-    "payments": 30, //amount of payments to send at a time
-    "password": "test" //password required for admin stats
+    "blocks": 40, //amount of blocks to send at a time
+    "payments": 40, //amount of payments to send at a time
+    "password": "" //password required for admin stats
 },
 
 /* Coin daemon connection details. */
 "daemon": {
     "host": "127.0.0.1",
-    "port": 29081
+    "port": 12328
 },
 
 /* Wallet daemon connection details. */
 "wallet": {
     "host": "127.0.0.1",
-    "port": 29082,
+    "port": 8070,
     "password": "<replace with rpc password>"
 },
 
@@ -358,7 +354,7 @@ Explanation for each field:
     },
     "wallet": {
         "checkInterval": 60,
-        "rpcMethod": "get_address_count"
+        "rpcMethod": "getBalance"
     }
 
 /* Collect pool statistics to display in frontend charts  */
@@ -473,7 +469,7 @@ var irc = "irc.freenode.net/#forknote";
 var email = "support@poolhost.com";
 
 /* Market stat display params from https://www.cryptonator.com/widget */
-var cryptonatorWidget = ["DSH-BTC", "DSH-USD", "DSH-EUR"];
+var cryptonatorWidget = ["CIN-BTC", "CIN-USD", "CIN-EUR"];
 
 /* Download link to cryptonote-easy-miner for Windows users. */
 var easyminerDownload = "https://github.com/zone117x/cryptonote-easy-miner/releases/";
@@ -578,7 +574,8 @@ Credits
 * [Wolf0](https://bitcointalk.org/index.php?action=profile;u=80740) - Helped try to deobfuscate some of the daemon code for getting a bug fixed
 * [Tacotime](https://bitcointalk.org/index.php?action=profile;u=19270) - helping with figuring out certain problems and lead the bounty for this project's creation
 * [fancoder](https://github.com/fancoder/) - See his repo for the changes
-* [TurtleCoin](https://github.com/turtlecoin/) - For making this great again
+* [TurtleCoin](https://github.com/turtlecoin/) - Forked from turtlecoin pool
+* [CrowdInvestNetwork](https://github.com/CrowdInvestNetwork) - Make this pool
 
 License
 -------
